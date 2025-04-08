@@ -3,9 +3,6 @@ const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
 const formatMessage = require("./utils/messages");
-// const createAdapter = require("@socket.io/redis-adapter").createAdapter;
-// const redis = require("redis");
-// const { createClient } = redis;
 require("dotenv").config();
 const {
   userJoin,
@@ -23,7 +20,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const botName = "QuiblyChat Bot";
 
-// REMOVE Redis-related code for StackBlitz
+// Remove Redis-related code for Vercel, as it's not needed in serverless
 /*
 (async () => {
   const pubClient = createClient({ url: "redis://127.0.0.1:6379" });
@@ -43,14 +40,14 @@ io.on("connection", (socket) => {
     socket.join(user.room);
 
     // Welcome current user
-    socket.emit("message", formatMessage(botName, "Welcome to QuiblyChat!"));
+    socket.emit("message", formatMessage(botName, "Welcome to QuiblyChat! Excessive use of profanity is not allowed."));
 
     // Broadcast when a user connects
     socket.broadcast
       .to(user.room)
       .emit(
         "message",
-        formatMessage(botName, `${user.username} has joined the chat`)
+        formatMessage(botName, `${user.username} has joined the chat.`)
       );
 
     // Send users and room info
@@ -65,6 +62,8 @@ io.on("connection", (socket) => {
     const user = getCurrentUser(socket.id);
 
     io.to(user.room).emit("message", formatMessage(user.username, msg));
+
+    console.log(user.room, formatMessage(user.username, msg));
   });
 
   // Runs when client disconnects
@@ -86,8 +85,10 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, '0.0.0.0', () =>
-  console.log(`Server running on http://localhost:${PORT}`)
-);
+// Export the handler for Vercel compatibility
+module.exports = (req, res) => {
+  // Ensure to handle the request and response properly for serverless environment
+  if (req.method === "GET" || req.method === "POST") {
+    server(req, res); // Pass to the server
+  }
+};
